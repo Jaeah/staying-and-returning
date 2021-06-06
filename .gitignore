@@ -1,6 +1,17 @@
-# Data
+# Python linter
+pylintrc
+
+# Figure directory
+figs/
+
+# Preprocessed data
+*.pickle
+
+# Raw data
 eyetrack/ # Eye-tracking data
 trackit/ # TrackIt data
+human_coded/ # Human coded data
+labeling_dataset/ # Labeling data
 cache/ # Cached HMM results
 
 # Byte-compiled / optimized / DLL files
