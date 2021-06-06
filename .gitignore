@@ -1,3 +1,8 @@
+# Data
+eyetrack/ # Eye-tracking data
+trackit/ # TrackIt data
+cache/ # Cached HMM results
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
