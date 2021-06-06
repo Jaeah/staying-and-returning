@@ -273,7 +273,7 @@ def report_ttest_2sample(null_hypothesis, sample1, sample2, paired, alpha=0.05):
 def linreg_summary_and_plot(x: str, y: str, data: pd.DataFrame, name=None, plot=True):
 
   if name:
-    print('{}:\n'.format(name.upper()))
+    print('\n{}:\n'.format(name.upper()))
 
   xs = data[x]
   ys = data[y]
