@@ -12,6 +12,7 @@ np.set_printoptions(suppress=True)
 
 import create_subjects_csvs
 import stats_utils
+import effect_of_distance_analysis
 
 _DATASET = 'ORIGINAL'
 _CODING = 'HMM'
