@@ -1,4 +1,3 @@
-# TODO: This script could be integrated into staying_vs_returning_analysis.py.
 import math
 
 import matplotlib.pyplot as plt
@@ -68,8 +67,6 @@ for idx, row in df.iterrows():
       distances_dict['is_to_target'].append(row['next_frame_HMM'] == 0)
       distances_dict['subject_id'].append(row['subject_id'])
 
-  # if idx > 10000: break  # FOR TESTING ONLY
-
 df = pd.DataFrame(distances_dict)
 df['is_transition_from_target'] = (df['is_transition'] & df['is_from_target'])
 df['is_transition_to_target'] = (df['is_transition'] & df['is_to_target'])
@@ -81,37 +78,6 @@ df['is_transition'] *= subsample_proportion
 df['is_transition_from_target'] *= subsample_proportion
 df['is_transition_to_target'] *= subsample_proportion
 df['is_transition_to_distractor'] *= subsample_proportion
-
-# # Plot distributions of transition and non-transition inter-object distances
-# plt.figure()
-# sns.distplot(df['distance'][df['is_transition']], label='Transitions')
-# sns.distplot(df['distance'][~df['is_transition']], label='Non-Transitions')
-# plt.xlabel('Distance to object')
-# plt.ylabel('Probability')
-# plt.legend()
-
-# # Generate figure of p-value over threshold
-# print('Plotting p-value over distance threshold...')
-# thresholds = range(50, get_max_distance(_DATASET), 10)
-# def linear_regressions_over_threshold(transition_type):
-#   betas = []
-#   pvalues = []
-#   for threshold in thresholds:
-#     thresholded_df = df[df['distance'] < threshold]
-#     y = thresholded_df[transition_type]
-#     x = thresholded_df['distance']
-#     model = sm.OLS(y, sm.add_constant(x)).fit()
-#     betas.append(model.params[1])
-#     pvalues.append(model.pvalues[1])
-#   return betas, pvalues
-# 
-# betas_from_target, pvalues_from_target = linear_regressions_over_threshold('is_transition_from_target')
-# betas_to_target, pvalues_to_target = linear_regressions_over_threshold('is_transition_to_target')
-# betas_to_distractor, pvalues_to_distractor = linear_regressions_over_threshold('is_transition_to_distractor')
-# 
-# stats_utils.linreg_summary_and_plot(x='distance', y='is_transition_from_target', data=df, name='Probability of Transitions from Target over Distance', plot=False)
-# stats_utils.linreg_summary_and_plot(x='distance', y='is_transition_to_target', data=df, name='Probability of Transitions to Target over Distance', plot=False)
-# stats_utils.linreg_summary_and_plot(x='distance', y='is_transition_to_distractor', data=df, name='Probability of Transitions from Distractor to Distractor over Distance', plot=False)
 
 def get_beta(df: pd.DataFrame, response: str):
   return sm.OLS(df[response], sm.add_constant(df['distance_in_degrees'])).fit().params[1]
@@ -137,36 +103,6 @@ print('Computing bootstrapped regression coefficients...')
 beta_from_target, lower_from_target, upper_from_target = get_beta_with_CIs(df, 'is_transition_from_target')
 beta_to_target, lower_to_target, upper_to_target = get_beta_with_CIs(df, 'is_transition_to_target')
 beta_to_distractor, lower_to_distractor, upper_to_distractor = get_beta_with_CIs(df, 'is_transition_to_distractor')
-
-# plt.figure()
-# plt.subplot(3, 1, 1)
-# plt.plot(thresholds, betas_from_target)
-# plt.plot([0, get_max_distance(_DATASET)], [0, 0], c='r', ls='--')
-# plt.yscale('symlog')
-# plt.subplot(3, 1, 2)
-# plt.plot(thresholds, betas_to_target)
-# plt.plot([0, get_max_distance(_DATASET)], [0, 0], c='r', ls='--')
-# plt.xlabel('beta')
-# plt.yscale('symlog')
-# plt.subplot(3, 1, 3)
-# plt.plot(thresholds, betas_to_distractor)
-# plt.plot([0, get_max_distance(_DATASET)], [0, 0], c='r', ls='--')
-# plt.yscale('symlog')
-# 
-# plt.figure()
-# plt.subplot(3, 1, 1)
-# plt.plot(thresholds, pvalues_from_target)
-# plt.plot([0, get_max_distance(_DATASET)], [1, 1], c='r', ls='--')
-# plt.yscale('log')
-# plt.subplot(3, 1, 2)
-# plt.plot(thresholds, pvalues_to_target)
-# plt.plot([0, get_max_distance(_DATASET)], [1, 1], c='r', ls='--')
-# plt.xlabel('p-value')
-# plt.yscale('log')
-# plt.subplot(3, 1, 3)
-# plt.plot(thresholds, pvalues_to_distractor)
-# plt.plot([0, get_max_distance(_DATASET)], [1, 1], c='r', ls='--')
-# plt.yscale('log')
 
 # Plot transition likelihood as a function of inter-object distance, separately
 # for each transition type
@@ -199,9 +135,6 @@ def plot_loess(x, y, plt_idx):
   if plt_idx == 3:
     plt.xlabel('Distance to object (degrees)')
   plt.fill_between(x,ll,ul,alpha=.33)
-
-# plot_loess(x=df['distance'], y=df['is_transition'], plt_idx=1)
-# plt.title(r'Any object $\to$ Any object')
 
 df_from_target = df[df['is_from_target']].reset_index()
 plot_loess(x=df_from_target['distance_in_degrees'],
