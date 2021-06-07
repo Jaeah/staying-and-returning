@@ -52,7 +52,7 @@ def _get_beta_with_CIs(df: pd.DataFrame, response: str, num_bootstrap_samples: i
 
 # Plot transition likelihood as a function of inter-object distance, separately
 # for each transition type
-def _plot_loess(x, y, plt_idx, dataset):
+def _plot_loess(x, y, plt_idx, dataset, subsample_proportion):
 
   # Sort data by x-coordinate for plotting
   ind = np.argsort(x)
@@ -138,20 +138,23 @@ def run_analysis(dataset: str, coding: str):
   _plot_loess(x=df_from_target['distance_in_degrees'],
              y=df_from_target['is_transition_from_target'],
              plt_idx=1,
-             dataset=dataset)
+             dataset=dataset,
+             subsample_proportion)
   plt.title(r'Target $\to$ Distractor')
   
   df_from_distractor = df[~df['is_from_target']].reset_index()
   _plot_loess(x=df_from_distractor['distance_in_degrees'],
              y=df_from_distractor['is_transition_to_target'],
              plt_idx=2,
-             dataset=dataset)
+             dataset=dataset,
+             subsample_proportion)
   plt.title(r'Distractor $\to$ Target')
   
   _plot_loess(x=df_from_distractor['distance_in_degrees'],
              y=df_from_distractor['is_transition_to_distractor'],
              plt_idx=3,
-             dataset=dataset)
+             dataset=dataset,
+             subsample_proportion)
   plt.title(r'Distractor $\to$ Distractor')
   
   plt.subplots_adjust(left=0.2, right=0.94, top=0.95, bottom=0.08, hspace=0.3)
