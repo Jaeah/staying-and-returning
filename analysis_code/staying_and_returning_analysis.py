@@ -123,7 +123,7 @@ def report_statistics_and_make_plots():
   plt.xlabel('Age (years)')
   plt.tight_layout()
 
-  effect_of_distance_analyses.run_analysis(_DATASET, _CODING)
+  effect_of_distance_analysis.run_analysis(_DATASET, _CODING)
 
   plt.show()
 
