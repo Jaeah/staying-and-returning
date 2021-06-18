@@ -30,25 +30,9 @@ def _get_max_distance(dataset: str):
   raise ValueError(f'dataset should be \'ORIGINAL\' or \'LABELING\' '
                    f'but was {dataset}')
 
-def _get_beta(df: pd.DataFrame, response: str):
-  return sm.OLS(df[response], sm.add_constant(df['distance_in_degrees'])).fit().params[1]
-
-def _get_beta_with_CIs(df: pd.DataFrame, response: str, num_bootstrap_samples: int = 10000):
-  subject_ids = list(df['subject_id'].unique())
-  bootstrap_sample_size =  len(subject_ids)
-
-  betas = []
-  for _ in range(num_bootstrap_samples):
-    subsample_ids = random.choices(subject_ids, k=bootstrap_sample_size)
-    subsampled_df = df[df['subject_id'].isin(subsample_ids)]
-    betas.append(_get_beta(subsampled_df, response))
-
-  estimate = _get_beta(df, response)
-  lower = np.percentile(betas, 2.5)
-  upper = np.percentile(betas, 97.5)
-  print(f'Estimated coefficient: {estimate} '
-        f'(bootstrapped 95% CI: ({lower}, {upper}))')
-  return estimate, lower, upper
+def _get_corrs_by_subject(df: pd.DataFrame, response: str):
+  """Correlations (by subject) between inter-object distance and response."""
+  return df.groupby('subject_id')[['distance_in_degrees', response]].corr().iloc[0::2, -1]
 
 # Plot transition likelihood as a function of inter-object distance, separately
 # for each transition type
@@ -120,18 +104,26 @@ def run_analysis(dataset: str, coding: str):
   df['is_transition_to_target'] = (df['is_transition'] & df['is_to_target'])
   df['is_transition_to_distractor'] = (df['is_transition'] & ~df['is_from_target'] & ~df['is_to_target'])
   df['distance_in_degrees'] = df['distance'].map(stats_utils.pixels_to_degrees)
-  
+
   # Correct for the fact that we downsampled non-transitions by 1000
   df['is_transition'] *= subsample_proportion
   df['is_transition_from_target'] *= subsample_proportion
   df['is_transition_to_target'] *= subsample_proportion
   df['is_transition_to_distractor'] *= subsample_proportion
-  
-  print('Computing bootstrapped regression coefficients...')
-  beta_from_target, lower_from_target, upper_from_target = _get_beta_with_CIs(df, 'is_transition_from_target')
-  beta_to_target, lower_to_target, upper_to_target = _get_beta_with_CIs(df, 'is_transition_to_target')
-  beta_to_distractor, lower_to_distractor, upper_to_distractor = _get_beta_with_CIs(df, 'is_transition_to_distractor')
-  
+
+  stats_utils.report_ttest_1sample(
+      null_hypothesis="mean(effect of distance on transitions from target) == 0",
+      sample=_get_corrs_by_subject(df, 'is_transition_from_target'),
+      popmean=0)
+  stats_utils.report_ttest_1sample(
+      null_hypothesis="mean(effect of distance on transitions to target) == 0",
+      sample=_get_corrs_by_subject(df, 'is_transition_to_target'),
+      popmean=0)
+  stats_utils.report_ttest_1sample(
+      null_hypothesis="mean(effect of distance on transitions to distractors) == 0",
+      sample=_get_corrs_by_subject(df, 'is_transition_to_distractor'),
+      popmean=0)
+
   print('Plotting transition probabilities over distance...')
   plt.figure(figsize=(5, 8))
   df_from_target = df[df['is_from_target']].reset_index()
