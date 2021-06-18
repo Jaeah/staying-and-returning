@@ -243,7 +243,7 @@ def report_ttest_1sample(
     alpha: Test level
   """
 
-  t_value, p_value = stats.ttest_1samp(sample, popmean)
+  t_value, p_value = stats.ttest_1samp(sample, popmean, nan_policy='omit')
   if one_sided and t_value > 0:
       p_value /= 2
   print('Test for null hypothesis "{}".'.format(null_hypothesis))
