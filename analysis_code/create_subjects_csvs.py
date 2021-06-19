@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pickle
 
@@ -70,9 +71,10 @@ def subject_is_good(subject, dataset: str ='ORIGINAL'):
   return True
 
 def _replace_hmm_with_human_coded(subjects):
+  print('Replacing HMM with human coding...')
   coding = {
-      # NOTE: Obect 0 is correct; there was a typo in the original data.
-      'Obect 0': 0,
+      'Obect 0': 0,  # 'Obect 0' is a typo appearing in part of the original data.
+      'Object 0': 0,
       'Object 1': 1,
       'Object 2': 2,
       'Object 3': 3,
@@ -81,7 +83,8 @@ def _replace_hmm_with_human_coded(subjects):
       'Object 6': 6,
       # Code both Off Task and Off Screen as missing data.
       'Off Task': -1,
-      'Off Screen': -1
+      'Off Screen': -1,
+      float('nan'): -1
   }
   for subject in subjects:
     for experiment in subject.experiments.values():
@@ -103,6 +106,13 @@ def _replace_hmm_with_human_coded(subjects):
 def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFrame:
 
   subjects = _load_subjects(dataset=dataset, coding=coding)
+  if coding == 'HUMAN':
+    if dataset != 'ORIGINAL':
+      raise ValueError('HUMAN coding is only available for ORIGINAL dataset, '
+                       f'but dataset was {dataset}')
+    _replace_hmm_with_human_coded(subjects)
+  elif coding != 'HMM':
+    raise ValueError(f'coding must be \'HMM\' or \'HUMAN\' but was {coding}')
 
   table_as_dict = {
       'subject_id': [], 'age': [], 'condition': [], 'trial_num': [],
@@ -115,7 +125,6 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
         trackit_trial = experiment.datatypes['trackit'].trials[trial_idx]
         eyetrack_trial = experiment.datatypes['eyetrack'].trials[trial_idx]
         for frame, HMM in enumerate(eyetrack_trial.HMM_MLE):
-          # TODO: When coding=='HUMAN', we need to downsample TrackIt by 6.
 
           # Experiment-level data
           table_as_dict['subject_id'].append(subject.ID)
@@ -134,6 +143,13 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
           table_as_dict['frame'].append(frame)
           table_as_dict['HMM'].append(HMM)
 
+        # When coding=='HUMAN', we need to downsample the temporal resolution of
+        # the TrackIt object locations by 6.
+        if coding == 'HUMAN':
+          step = 6
+        else:
+          step = 1
+
         # Frame-level array data
         for object_idx in range(trackit_trial.object_positions.shape[0]):
           object_x_col_name = f'object_{object_idx}_x'
@@ -141,8 +157,17 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
           if not object_x_col_name in table_as_dict:
             table_as_dict[object_x_col_name] = []
             table_as_dict[object_y_col_name] = []
-          table_as_dict[object_x_col_name].extend(list(trackit_trial.object_positions[object_idx, :, 0]))
-          table_as_dict[object_y_col_name].extend(list(trackit_trial.object_positions[object_idx, :, 1]))
+          x_coords = trackit_trial.object_positions[object_idx, ::step, 0]
+          y_coords = trackit_trial.object_positions[object_idx, ::step, 1]
+
+          # Since the human coding is not perfectly aligned with the HMM coding,
+          # we may need to drop 1 or 2 samples at the end.
+          min_len = min(len(eyetrack_trial.HMM_MLE), len(x_coords))
+          x_coords = x_coords[:min_len]
+          y_coords = y_coords[:min_len]
+
+          table_as_dict[object_x_col_name].extend(list(x_coords))
+          table_as_dict[object_y_col_name].extend(list(y_coords))
 
   return pd.DataFrame(table_as_dict)
   
