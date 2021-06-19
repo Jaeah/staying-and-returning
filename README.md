@@ -23,14 +23,8 @@ cd analysis_code
 ```
 lrunzip \*.lrz
 ```
-4. For the main analyses, run the analysis script:
+4. To run the analyses, run the analysis script:
 ```
 python staying_and_returning_analysis.py
 ```
-By default, this will run the analyses of Experiment 1 with gaze data coded by the hidden Markov model. To run the Labeling Dataset analyses of Experiment 2, change Line 16 of `staying_and_returning_analysis.py` from `_DATASET = 'ORIGINAL'` to `_DATASET = 'LABELING'`. To run the Human Coding analyses of Appendix B, change Line 17 of `staying_and_returning_analysis.py` from `_CODING = 'HMM'` to `_CODING = 'HUMAN'`.
-
-5. For the analyses of the effect of distance of transition probabilitys, run the distance script
-```
-python effect_of_distance_analysis.py
-```
-As with `staying_and_returning_analysis.py`, this will run the analyses in Experiment 1, and the analyses of Experiment 2 and Appendix B can be run by changing Lines 15 and 16 of `effect_of_distance_analysis.py` to `_DATASET = 'LABELING'` or `_CODING = 'HUMAN'`, respectively.
+By default, this will run the analyses of Experiment 1 with gaze data coded by the hidden Markov model. To run the Labeling Dataset analyses of Experiment 2, change Line 17 of `staying_and_returning_analysis.py` from `_DATASET = 'ORIGINAL'` to `_DATASET = 'LABELING'`. To run the Human Coding analyses of Appendix B, change Line 18 of `staying_and_returning_analysis.py` from `_CODING = 'HMM'` to `_CODING = 'HUMAN'`.
