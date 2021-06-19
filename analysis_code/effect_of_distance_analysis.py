@@ -77,6 +77,8 @@ def run_analysis(dataset: str, coding: str):
   # For computational reasons, we subsample non-transitions. Later we scale the
   # regression response to account for this.
   subsample_proportion = 0.001
+  if coding == 'HMM':
+    subsample_proportion = 1
   
   print('Computing frame-wise transition data...')
   distances_dict = {'distance': [], 'is_transition': [], 'is_from_target': [], 'is_to_target': [], 'subject_id': []}
