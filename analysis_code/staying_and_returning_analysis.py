@@ -72,7 +72,7 @@ def report_statistics_and_make_plots():
   plt.plot([3.5, 6], [1/6, 1/6], c='red', ls='--')
   stats_utils.linreg_summary_and_plot(x='age', y='returning', data=df, name='PTDT over age')
   plt.xlabel('Age (years)')
-  plt.ylabel('PTDT (proportion)')
+  plt.ylabel('$\widehat R$ (proportion)')
 
   plt.subplot(2, 2, 3)
   plt.xlim((3.5, 6))
@@ -80,7 +80,7 @@ def report_statistics_and_make_plots():
   plt.plot([3.5, 6], [0, 0], c='red', ls='--')
   stats_utils.linreg_summary_and_plot(x='age', y='staying', data=df, name='NDT over age')
   plt.xlabel('Age (years)')
-  plt.ylabel('NDT (seconds)')
+  plt.ylabel('$\widehat S$ (seconds)')
 
   plt.subplot(2, 2, 2)
   plt.xlim((0, 1))
@@ -89,7 +89,7 @@ def report_statistics_and_make_plots():
   plt.plot([1/6, 1/6], [0, 1], c='red', ls='--')
   stats_utils.linreg_summary_and_plot(x='returning', y='loc_acc', data=df,
                                       name='location accuracy over PTDT')
-  plt.xlabel('PTDT (proportion)')
+  plt.xlabel('$\widehat R$ (proportion)')
   plt.ylabel('Location Accuracy')
 
   plt.subplot(2, 2, 4)
@@ -99,7 +99,7 @@ def report_statistics_and_make_plots():
   plt.plot([0, 0], [0, 1], c='red', ls='--')
   stats_utils.linreg_summary_and_plot(x='staying', y='loc_acc', data=df,
                                       name='location accuracy over NDT')
-  plt.xlabel('NDT (seconds)')
+  plt.xlabel('$\widehat S$ (seconds)')
   plt.ylabel('Location Accuracy')
   plt.tight_layout()
 
