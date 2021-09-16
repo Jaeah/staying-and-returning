@@ -1,5 +1,5 @@
-# Temporal Dynamics of Attention in Young Children
-This repository contains Python code underlying analyses in the paper "Temporal Dynamics of Attention in Young Children".
+# Staying and Returning Dynamics of Young Children's Attention
+This repository contains Python code underlying analyses in the paper "Staying and Returning Dynamics of Young Children's Attention", by Kim, Singh, Vales, Keebler, Fisher, & Thiessen.
 
 The below instructions explain the steps needed to reproduce the analyses reported in the paper.
 All necessary data files needed are included in the repository.
