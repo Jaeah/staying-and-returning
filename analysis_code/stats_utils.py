@@ -13,6 +13,7 @@ from scipy import stats
 import seaborn as sns
 import statsmodels.api as sm
 import pandas as pd
+from tqdm import tqdm
 
 from typing import Callable, Collection, List, NamedTuple, Tuple
 
@@ -323,7 +324,8 @@ def mediation_analysis(x: str, y: str, m: str, data: pd.DataFrame, title, num_re
   indirect_effect, prop_mediated = _calc_indirect_effect(data[x], data[y], data[m])
   subsampled_indirect_effects = np.zeros((num_reps,))
   subsampled_prop_mediated = np.zeros((num_reps,))
-  for rep in range(num_reps):
+  print('Running bootstrap for mediation analysis...')
+  for rep in tqdm(range(num_reps)):
     samples = random.choices(range(len(data[x])), k=len(data[x]))
     x_sub = [data.loc[data.index[i], x] for i in samples]
     y_sub = [data.loc[data.index[i], y] for i in samples]
