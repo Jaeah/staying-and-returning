@@ -215,6 +215,7 @@ def get_trial_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
 
 def get_experiment_data(
     memcheck_correct_only: bool = False,
+    correct_trials_only: bool = False,
     dataset: str = 'ORIGINAL',
     coding: str = 'HMM',
 ) -> pd.DataFrame:
@@ -256,6 +257,8 @@ def get_experiment_data(
             eyetrack_trial.proportion_missing)
 
   df = pd.DataFrame(table_as_dict)
+  if correct_trials_only:
+    df = df[df['loc_acc']]
   if memcheck_correct_only:
     df = df[df['mem_check']]
 
