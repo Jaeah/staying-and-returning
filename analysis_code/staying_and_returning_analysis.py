@@ -16,11 +16,16 @@ import effect_of_distance_analysis
 
 _DATASET = 'ORIGINAL'
 _CODING = 'HMM'
+_CORRECT_TRIALS_ONLY = False
+_MEMCHECK_CORRECT_TRIALS_ONLY = False
 
 def report_statistics_and_make_plots():
   """Generates statistics and plots reported in paper."""
 
-  df = create_subjects_csvs.get_experiment_data(coding=_CODING, dataset=_DATASET)
+  df = create_subjects_csvs.get_experiment_data(coding=_CODING,
+                                                dataset=_DATASET,
+                                                correct_trials_only=_CORRECT_TRIALS_ONLY,
+                                                memcheck_correct_only=_MEMCHECK_CORRECT_TRIALS_ONLY)
 
   # Basic statistics about each value
   stats_utils.report_univariate_statistics(name='Location Accuracy',
@@ -68,7 +73,7 @@ def report_statistics_and_make_plots():
   # Linearly regress statistics over age
   plt.subplot(2, 2, 1)
   plt.xlim((3.5, 6))
-  plt.ylim((0, 1))
+  plt.ylim((0, 1.05))
   plt.plot([3.5, 6], [1/6, 1/6], c='red', ls='--')
   stats_utils.linreg_summary_and_plot(x='age', y='returning', data=df, name='PTDT over age')
   plt.xlabel('Age (years)')
@@ -83,8 +88,8 @@ def report_statistics_and_make_plots():
   plt.ylabel('$\widehat S$ (seconds)')
 
   plt.subplot(2, 2, 2)
-  plt.xlim((0, 1))
-  plt.ylim((0, 1))
+  plt.xlim((0, 1.05))
+  plt.ylim((-0.05, 1.05))
   plt.plot([0, 1], [1/36, 1/36], c='red', ls='--')
   plt.plot([1/6, 1/6], [0, 1], c='red', ls='--')
   stats_utils.linreg_summary_and_plot(x='returning', y='loc_acc', data=df,
@@ -94,7 +99,7 @@ def report_statistics_and_make_plots():
 
   plt.subplot(2, 2, 4)
   plt.xlim((-0.4, 2.4))
-  plt.ylim((0, 1))
+  plt.ylim((-0.05, 1.05))
   plt.plot([-1, 3], [1/36, 1/36], c='red', ls='--')
   plt.plot([0, 0], [0, 1], c='red', ls='--')
   stats_utils.linreg_summary_and_plot(x='staying', y='loc_acc', data=df,
