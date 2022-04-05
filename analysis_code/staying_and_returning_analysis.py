@@ -130,6 +130,16 @@ def report_statistics_and_make_plots():
 
   effect_of_distance_analysis.run_analysis(_DATASET, _CODING)
 
+  # Effect of gender on Staying & Returning
+  stats_utils.report_ttest_2sample('mean(Returning, Male) == mean(Returning, Female)',
+                                   df['returning'][df['sex'] == 'Male'],
+                                   df['returning'][df['sex'] == 'Female'],
+                                   paired=False)
+  stats_utils.report_ttest_2sample('mean(Staying, Male) == mean(Staying, Female)',
+                                   df['staying'][df['sex'] == 'Male'],
+                                   df['staying'][df['sex'] == 'Female'],
+                                   paired=False)
+
   plt.show()
 
 def main():
