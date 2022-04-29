@@ -294,7 +294,7 @@ def linear_regression_with_CIs(x, y, return_CIs = True):
   CI = model.conf_int(alpha=0.05, cols=[1])[0]
   return model.params[1], CI[0], CI[1]
 
-def _calc_indirect_effect(x, y, m):
+def _calc_indirect_effect(x, y, m, c = None):
   """Estimate standardized indirect effect and proportion of mediation.
   
   Specifically, computes the estimated indirect effect and proportion of the
@@ -306,14 +306,23 @@ def _calc_indirect_effect(x, y, m):
   x = stats.zscore(x)
   y = stats.zscore(y)
   m = stats.zscore(m)
-  total_effect = sm.OLS(y, sm.add_constant(x)).fit().params[1]
+
+  xs = x
+  if c is not None: 
+    c = stats.zscore(c)
+    xs = np.stack((x, c), axis=1)
+  total_effect = sm.OLS(y, sm.add_constant(xs)).fit().params[1]
+
   xs = np.stack((x, m), axis=1)
+  if c is not None:
+    xs = np.stack((x, m, c), axis=1)
   direct_effect = sm.OLS(y, sm.add_constant(xs)).fit().params[1]
+
   indirect_effect = total_effect - direct_effect
   proportion_mediated = indirect_effect/total_effect
   return indirect_effect, proportion_mediated
 
-def mediation_analysis(x: str, y: str, m: str, data: pd.DataFrame, title, num_reps = 10000):
+def mediation_analysis(x: str, y: str, m: str, data: pd.DataFrame, title, c = None, num_reps = 10000):
 
   conditions = data['condition'].unique()
   if len(conditions) != 1:
@@ -321,7 +330,8 @@ def mediation_analysis(x: str, y: str, m: str, data: pd.DataFrame, title, num_re
                      f'{conditions}')
   condition = conditions[0]
 
-  indirect_effect, prop_mediated = _calc_indirect_effect(data[x], data[y], data[m])
+  data_c = data[c] if c is not None else None
+  indirect_effect, prop_mediated = _calc_indirect_effect(data[x], data[y], data[m], data_c)
   subsampled_indirect_effects = np.zeros((num_reps,))
   subsampled_prop_mediated = np.zeros((num_reps,))
   print('Running bootstrap for mediation analysis...')
@@ -330,7 +340,8 @@ def mediation_analysis(x: str, y: str, m: str, data: pd.DataFrame, title, num_re
     x_sub = [data.loc[data.index[i], x] for i in samples]
     y_sub = [data.loc[data.index[i], y] for i in samples]
     m_sub = [data.loc[data.index[i], m] for i in samples]
-    subsampled_indirect_effects[rep], subsampled_prop_mediated[rep] = _calc_indirect_effect(x_sub, y_sub, m_sub)
+    c_sub = [data.loc[data.index[i], c] for i in samples] if c is not None else None
+    subsampled_indirect_effects[rep], subsampled_prop_mediated[rep] = _calc_indirect_effect(x_sub, y_sub, m_sub, c_sub)
 
   indirect_effect_CI_lower = np.percentile(subsampled_indirect_effects, 2.5)
   indirect_effect_CI_upper = np.percentile(subsampled_indirect_effects, 97.5)
