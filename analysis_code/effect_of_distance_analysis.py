@@ -34,6 +34,10 @@ def _get_corrs_by_subject(df: pd.DataFrame, response: str):
   """Correlations (by subject) between inter-object distance and response."""
   return df.groupby('subject_id')[['distance_in_degrees', response]].corr().iloc[0::2, -1]
 
+def _get_corrs_by_age(df: pd.DataFrame, response: str):
+  """Correlations (by subject) between inter-object distance and response."""
+  return df.groupby(['subject_id', 'age'])[['distance_in_degrees', response]].corr().iloc[0::2, -1]
+
 # Plot transition likelihood as a function of inter-object distance, separately
 # for each transition type
 def _plot_loess(x, y, plt_idx, dataset, subsample_proportion):
@@ -70,7 +74,7 @@ def run_analysis(dataset: str, coding: str):
   # Load frame-level data
   print('Loading frame-level data...')
   df = create_subjects_csvs.get_frame_data(coding=coding, dataset=dataset)
-  
+
   # Compute next object for each pair of consecutive frames.
   df = stats_utils.add_next_object_column(df)
   
@@ -81,7 +85,8 @@ def run_analysis(dataset: str, coding: str):
     subsample_proportion = 1
   
   print('Computing frame-wise transition data...')
-  distances_dict = {'distance': [], 'is_transition': [], 'is_from_target': [], 'is_to_target': [], 'subject_id': []}
+  distances_dict = {'distance': [], 'is_transition': [], 'is_from_target': [],
+                    'is_to_target': [], 'subject_id': [], 'age': []}
   for idx, row in df.iterrows():
     source_x = row[f'object_{row["HMM"]}_x']
     source_y = row[f'object_{row["HMM"]}_y']
@@ -100,6 +105,7 @@ def run_analysis(dataset: str, coding: str):
         distances_dict['is_from_target'].append(row['HMM'] == 0)
         distances_dict['is_to_target'].append(row['next_frame_HMM'] == 0)
         distances_dict['subject_id'].append(row['subject_id'])
+        distances_dict['age'].append(row['age'])
   
   df = pd.DataFrame(distances_dict)
   df['is_transition_from_target'] = (df['is_transition'] & df['is_from_target'])
@@ -125,6 +131,22 @@ def run_analysis(dataset: str, coding: str):
       null_hypothesis="mean(effect of distance on transitions to distractors) == 0",
       sample=_get_corrs_by_subject(df, 'is_transition_to_distractor'),
       popmean=0)
+
+  stats_utils.linreg_summary_and_plot(
+      x='age',
+      y='is_transition_from_target',
+      data=_get_corrs_by_age(df, 'is_transition_from_target').reset_index().dropna(),
+      name='Location Accuracy over Age')
+  stats_utils.linreg_summary_and_plot(
+      x='age',
+      y='is_transition_to_target',
+      data=_get_corrs_by_age(df, 'is_transition_to_target').reset_index().dropna(),
+      name='Location Accuracy over Age')
+  stats_utils.linreg_summary_and_plot(
+      x='age',
+      y='is_transition_to_distractor',
+      data=_get_corrs_by_age(df, 'is_transition_to_distractor').reset_index().dropna(),
+      name='Location Accuracy over Age')
 
   print('Plotting transition probabilities over distance...')
   plt.figure(figsize=(5, 8))
