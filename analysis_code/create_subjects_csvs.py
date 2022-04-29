@@ -115,8 +115,9 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
     raise ValueError(f'coding must be \'HMM\' or \'HUMAN\' but was {coding}')
 
   table_as_dict = {
-      'subject_id': [], 'age': [], 'condition': [], 'trial_num': [],
-      'trial_len': [], 'loc_acc': [], 'error_type': [], 'frame': [], 'HMM': []
+      'subject_id': [], 'age': [], 'condition': [], 'trial_num': [], 'target': [],
+      'trial_len': [], 'loc_acc': [], 'error_type': [], 'frame': [], 'HMM': [],
+      'shape': []
   }
 
   for subject in subjects:
@@ -124,6 +125,7 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
       for trial_idx in trials(dataset):
         trackit_trial = experiment.datatypes['trackit'].trials[trial_idx]
         eyetrack_trial = experiment.datatypes['eyetrack'].trials[trial_idx]
+        object_names = trackit_trial.meta_data['object_names']
         for frame, HMM in enumerate(eyetrack_trial.HMM_MLE):
 
           # Experiment-level data
@@ -133,6 +135,7 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
 
           # Trial-level data
           table_as_dict['trial_num'].append(trial_idx)
+          table_as_dict['target'].append(trackit_trial.trial_metadata['target'])
           table_as_dict['trial_len'].append(len(eyetrack_trial.HMM_MLE))
           table_as_dict['loc_acc'].append(
               trackit_trial.trial_metadata['gridClickCorrect'] == 'true')
@@ -142,6 +145,7 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
           # Frame-level data
           table_as_dict['frame'].append(frame)
           table_as_dict['HMM'].append(HMM)
+          table_as_dict['shape'].append(object_names[HMM])
 
         # When coding=='HUMAN', we need to downsample the temporal resolution of
         # the TrackIt object locations by 6.
