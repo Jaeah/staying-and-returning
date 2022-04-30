@@ -117,7 +117,7 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
   table_as_dict = {
       'subject_id': [], 'age': [], 'condition': [], 'trial_num': [], 'target': [],
       'trial_len': [], 'loc_acc': [], 'error_type': [], 'frame': [], 'HMM': [],
-      'shape': []
+      'shapes': []
   }
 
   for subject in subjects:
@@ -125,7 +125,7 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
       for trial_idx in trials(dataset):
         trackit_trial = experiment.datatypes['trackit'].trials[trial_idx]
         eyetrack_trial = experiment.datatypes['eyetrack'].trials[trial_idx]
-        object_names = trackit_trial.meta_data['object_names']
+
         for frame, HMM in enumerate(eyetrack_trial.HMM_MLE):
 
           # Experiment-level data
@@ -145,7 +145,7 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
           # Frame-level data
           table_as_dict['frame'].append(frame)
           table_as_dict['HMM'].append(HMM)
-          table_as_dict['shape'].append(object_names[HMM])
+          table_as_dict['shapes'].append(trackit_trial.meta_data['object_names'])
 
         # When coding=='HUMAN', we need to downsample the temporal resolution of
         # the TrackIt object locations by 6.
