@@ -19,7 +19,7 @@ def condition(dataset: str):
   if dataset == 'ORIGINAL':
     return 'noshrinky'
   if dataset == 'LABELING':
-    return 'labeled'
+    return 'unlabeled'
   raise ValueError(f'dataset should be \'ORIGINAL\' or \'LABELING\' '
                    f'but was {dataset}')
 
@@ -103,7 +103,12 @@ def _replace_hmm_with_human_coded(subjects):
         eyetrack_trial = experiment.datatypes['eyetrack'].trials[trial_idx]
         eyetrack_trial.HMM_MLE = human_coding.to_numpy()
 
-def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFrame:
+def get_frame_data(
+    dataset: str = 'ORIGINAL',
+    coding: str = 'HMM',
+    memcheck_correct_only: bool = False,
+    correct_trials_only: bool = False,
+) -> pd.DataFrame:
 
   subjects = _load_subjects(dataset=dataset, coding=coding)
   if coding == 'HUMAN':
@@ -116,8 +121,8 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
 
   table_as_dict = {
       'subject_id': [], 'age': [], 'condition': [], 'trial_num': [], 'target': [],
-      'trial_len': [], 'loc_acc': [], 'error_type': [], 'frame': [], 'HMM': [],
-      'shapes': []
+      'trial_len': [], 'mem_check': [], 'loc_acc': [], 'error_type': [],
+      'frame': [], 'HMM': [], 'shapes': []
   }
 
   for subject in subjects:
@@ -137,6 +142,8 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
           table_as_dict['trial_num'].append(trial_idx)
           table_as_dict['target'].append(trackit_trial.trial_metadata['target'])
           table_as_dict['trial_len'].append(len(eyetrack_trial.HMM_MLE))
+          table_as_dict['mem_check'].append(
+              trackit_trial.trial_metadata['lineupClickCorrect'] == 'true')
           table_as_dict['loc_acc'].append(
               trackit_trial.trial_metadata['gridClickCorrect'] == 'true')
           table_as_dict['error_type'].append(
@@ -173,20 +180,30 @@ def get_frame_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
           table_as_dict[object_x_col_name].extend(list(x_coords))
           table_as_dict[object_y_col_name].extend(list(y_coords))
 
-  return pd.DataFrame(table_as_dict)
+  df = pd.DataFrame(table_as_dict)
+  if correct_trials_only:
+    df = df[df['loc_acc']]
+  if memcheck_correct_only:
+    df = df[df['mem_check']]
+
+  return df
   
 
 def get_trial_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFrame:
   subjects = _load_subjects(dataset=dataset, coding=coding)
 
-  table_as_dict = {'subject_id': [], 'age': [], 'condition': [], 'target': [],
-                   'trial_num': [], 'trial_len': [], 'loc_acc': [],
-                   'mem_check': [], 'pfot': [], 'returning': [], 'staying': [],
-                   'proportion_missing_eyetracking': [], 'atr': [], 'wtd': [],
-                   'atd': [], 'staying_df': []}
+  table_as_dict = {'subject_id': [], 'age': [], 'condition': [],
+#           'target': [],
+#                    'trial_num': [], 'trial_len': [], 'loc_acc': [],
+#                    'mem_check': [], 'pfot': [], 'returning': [], 'staying': [],
+'proportion_missing_eyetracking': [], 'len_frames': []}
+#   , 'atr': [], 'wtd': [],
+#                    'atd': [], 'staying_df': []}
 
   for subject in subjects:
     for experiment in subject.experiments.values():
+      if len(experiment.datatypes['trackit'].trials) < 11:
+        continue
       for trial_idx in trials(dataset):
         trackit_trial = experiment.datatypes['trackit'].trials[trial_idx]
         eyetrack_trial = experiment.datatypes['eyetrack'].trials[trial_idx]
@@ -197,22 +214,23 @@ def get_trial_data(dataset: str = 'ORIGINAL', coding: str = 'HMM') -> pd.DataFra
         table_as_dict['age'].append(experiment.age)
 
         # Trial-level data
-        table_as_dict['trial_num'].append(trial_idx)
-        table_as_dict['trial_len'].append(len(eyetrack_trial.HMM_MLE))
-        table_as_dict['target'].append(trackit_trial.trial_metadata['target'])
-        table_as_dict['loc_acc'].append(
-            trackit_trial.trial_metadata['gridClickCorrect'] == 'true')
-        table_as_dict['mem_check'].append(
-            trackit_trial.trial_metadata['lineupClickCorrect'] == 'true')
-        table_as_dict['pfot'].append(stats_utils.trial_pfot(eyetrack_trial))
-        table_as_dict['returning'].append(stats_utils.trial_ptdt(eyetrack_trial))
-        table_as_dict['staying'].append(stats_utils.trial_ndt(eyetrack_trial, coding=coding))
-        table_as_dict['staying_df'].append(stats_utils.trial_ndt(eyetrack_trial, drop_first=True, coding=coding))
-        table_as_dict['atd'].append(stats_utils.trial_atd(eyetrack_trial))
-        table_as_dict['wtd'].append(stats_utils.trial_wtd(eyetrack_trial))
-        table_as_dict['atr'].append(stats_utils.trial_atr(eyetrack_trial))
+        # table_as_dict['trial_num'].append(trial_idx)
+        # table_as_dict['trial_len'].append(len(eyetrack_trial.HMM_MLE))
+        # table_as_dict['target'].append(trackit_trial.trial_metadata['target'])
+        # table_as_dict['loc_acc'].append(
+        #     trackit_trial.trial_metadata['gridClickCorrect'] == 'true')
+        # table_as_dict['mem_check'].append(
+        #     trackit_trial.trial_metadata['lineupClickCorrect'] == 'true')
+        # table_as_dict['pfot'].append(stats_utils.trial_pfot(eyetrack_trial))
+        # table_as_dict['returning'].append(stats_utils.trial_ptdt(eyetrack_trial))
+        # table_as_dict['staying'].append(stats_utils.trial_ndt(eyetrack_trial, coding=coding))
+        # table_as_dict['staying_df'].append(stats_utils.trial_ndt(eyetrack_trial, drop_first=True, coding=coding))
+        # table_as_dict['atd'].append(stats_utils.trial_atd(eyetrack_trial))
+        # table_as_dict['wtd'].append(stats_utils.trial_wtd(eyetrack_trial))
+        # table_as_dict['atr'].append(stats_utils.trial_atr(eyetrack_trial))
         table_as_dict['proportion_missing_eyetracking'].append(
             eyetrack_trial.proportion_missing)
+        table_as_dict['len_frames'].append(eyetrack_trial.data.shape[0])
 
   return pd.DataFrame(table_as_dict)
   
@@ -274,7 +292,12 @@ def get_experiment_data(
 def main():
   # print(get_frame_data())
   # print(get_trial_data())
-  print(get_experiment_data(coding='HMM', dataset='ORIGINAL'))
+  # print(get_experiment_data(coding='HMM', dataset='ORIGINAL'))
+  df = get_trial_data()
+  df = df[df['condition'] == 'noshrinky']
+  print(df)
+  print(df['proportion_missing_eyetracking'].mean())
+  print(df.groupby('subject_id').sum().reset_index().mean())
   
 
 if __name__ == '__main__':
