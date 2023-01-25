@@ -67,13 +67,23 @@ def _plot_loess(x, y, plt_idx, dataset, subsample_proportion):
     plt.xlabel('Distance to object (degrees)')
   plt.fill_between(x,ll,ul,alpha=.33)
 
-def run_analysis(dataset: str, coding: str):
+def run_analysis(
+    dataset: str,
+    coding: str,
+    memcheck_correct_only: bool = False,
+    correct_trials_only: bool = False
+):
 
   num_objects = _get_num_objects(dataset)
   
   # Load frame-level data
   print('Loading frame-level data...')
-  df = create_subjects_csvs.get_frame_data(coding=coding, dataset=dataset)
+  df = create_subjects_csvs.get_frame_data(
+      coding=coding,
+      dataset=dataset,
+      memcheck_correct_only=memcheck_correct_only,
+      correct_trials_only=correct_trials_only,
+  )
 
   # Compute next object for each pair of consecutive frames.
   df = stats_utils.add_next_object_column(df)
@@ -178,4 +188,4 @@ def run_analysis(dataset: str, coding: str):
   plt.show()
 
 if __name__ == '__main__':
-  run_analysis('ORIGINAL', 'HMM')
+  run_analysis('ORIGINAL', 'HMM', memcheck_correct_only=True)
